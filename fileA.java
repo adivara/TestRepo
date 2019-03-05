@@ -1,73 +1,71 @@
+package com.src;
 
-package gov.illinois.ies.business.rules.co;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
-import gov.illinois.ies.business.rules.co.CoDebugger;
-import gov.illinois.ies.business.entities.correspondence.COCorrespondence;
-import gov.illinois.ies.business.entities.correspondence.DCCargo;
-import gov.illinois.ies.business.entities.correspondence.DocumentCargo;
+public class SingleTonDesignPattern implements Serializable {
 
-/**
- * The class <code>FXX401Assembler</code> assembles the form "IL444-3430 Congratulations on Your New Job!"
- * This class prepares feed file for OPUS servers.
- */
-public class FXX401Assembler extends DCAssembler implements CoAssembler {
+	
+	private static SingleTonDesignPattern obj = new SingleTonDesignPattern();
+	
+	private SingleTonDesignPattern(){
+		
+	}
+	
+	private static SingleTonDesignPattern methodA(){
+		return obj;
+	}
+	
+	private int num =0;
 
-	/**
-	 * Constructor for FXX401Assembler. 
-	 */
-	public FXX401Assembler() {
-		super();
+	public int getNum() {
+		return num;
 	}
 
-	/**
-	 * The generate document method of the assembler which in turn calls all
-	 * appropriate methods of this class and the parent classes to build the
-	 * printString.
-	 * 
-	 * @param coCorrespondence CO trigger detail Object
-	 * @param templateSeqNo document page number
-	 * @return Contains case detail information for pending case number
-	 * @throws CoException
-	 */
-	public StringBuffer genarateDocument(COCorrespondence coCorrespondence, long templateSeqNo)	throws CoException {
-		this.addressLabelRequired = true;
-		StringBuffer printString = new StringBuffer();			
-		if (templateSeqNo == 1) {
-			documentCargo = new DCCargo();
-			this.setCoCorrespondence(coCorrespondence);
-
-			documentCargo = (DocumentCargo) super.buildCargo();
-			if (super.getCoCorrespondence().getIsManualyGenerated() == true){
-				try {
-					documentCargo.setDefault();	
-				} catch (Exception e) {
-					throw new CoException(
-							"Exception in FXX401Assembler:setDefault()", e);
-				}
-			}
-			printString = this.getPrintString(new StringBuffer(),templateSeqNo);	
-		}return printString;
+	public void setNum(int num) {
+		this.num = num;
+	}
+	
+	protected Object readResolve(){
+		return obj;
+		
 	}
 
-	/**
-	 * This method prepares and formats pending case information.
-	 * 
-	 * @param source default caseApp information
-	 * @param templateSeqNumber document page number 
-	 * @return Contains case detail information for pending case number
-	 */
-	public StringBuffer getPrintString(StringBuffer source, 
-			long templateSeqNumber) throws CoException {
-		try {
-			if (templateSeqNumber == 1 ) {
-				source.append(super.getStdCoHeaderBlock());
-			}
-		}catch (Exception e) {
-			throw new CoException(
-					"Exception in FXX401Assembler:getPrintString()", e);
-		}
-		CoDebugger.debugInformation("Exit FXX401Assembler.getPrintString()");
-		return source;
+	public static void main(String[] args) throws IOException, ClassNotFoundException {
+		SingleTonDesignPattern obj=SingleTonDesignPattern.methodA();
+		
+		String fileName="singleTon.bin";
+		saveToFile(obj,fileName);
+		System.out.println(obj);
+		SingleTonDesignPattern obj1=SingleTonDesignPattern.methodA();
+		SingleTonDesignPattern result=readFromFile(obj1,fileName);
+		System.out.println(result);
+
+		
+		
 	}
+
+	private static SingleTonDesignPattern readFromFile(
+			SingleTonDesignPattern obj1, String fileName) throws IOException, ClassNotFoundException {
+
+		FileInputStream fin = new FileInputStream(fileName);
+		ObjectInputStream in = new ObjectInputStream(fin);
+		
+		return (SingleTonDesignPattern) in.readObject();
+	}
+
+	
+
+	private static void saveToFile(SingleTonDesignPattern obj, String fileName) throws IOException {
+
+		FileOutputStream fout = new FileOutputStream(fileName);
+		ObjectOutputStream out = new ObjectOutputStream(fout);
+		out.writeObject(obj);
+	}
+
 }
-
